@@ -81,6 +81,12 @@ Some source is deliberately withheld and will not be present:
 
 ---
 
+## Roadmap
+
+See [`ROADMAP.md`](ROADMAP.md) — currently cloud saves via a CloudRedirect-style redirector.
+
+---
+
 ## Credits
 
 This project exists because other people published their work. Every one of these was studied, learned from, or built upon directly — thank you for open-sourcing them.
