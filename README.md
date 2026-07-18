@@ -81,11 +81,21 @@ Some source is deliberately withheld and will not be present:
 
 ---
 
-## Credits & license
+## Credits
 
-Built on **[GameNative](https://github.com/utkarshdalal/GameNative)** (GPL-3.0). The Steam/manifest workflow is ported from **LuaTools**. Steam connectivity is provided by **[JavaSteam](https://github.com/Longi94/JavaSteam)** (MIT).
+This project exists because other people published their work. Every one of these was studied, learned from, or built upon directly — thank you for open-sourcing them.
+
+- **[GameNative](https://github.com/utkarshdalal/GameNative)** — the foundation. The entire Wine/Proton container, Steam authentication, depot downloader and library UI are theirs; Unchained is a fork that adds a manifest workflow on top.
+- **[SLSsteam](https://github.com/AceSLS/SLSsteam)** by AceSLS — the original approach to feeding ownership and depot information to Steam, and the basis everything downstream grew from.
+- **[slsteam-moon](https://github.com/swwayps/slsteam-moon)** by swwayps — a branch of SLSsteam adding protocol handlers, SteamStub support and a Lua manifest importer.
+- **[luatools-moon](https://github.com/swwayps/luatools-moon)** by swwayps — the LuaTools plugin and installer this project's manifest-source pipeline is ported from.
+- **[JavaSteam](https://github.com/Longi94/JavaSteam)** by Longi94 — the Steam client implementation the download path runs on.
+
+## License
 
 Licensed under **GPL-3.0** — see [`LICENSE`](LICENSE).
+
+Built on GameNative (GPL-3.0) and inherits that license. JavaSteam is MIT. Upstream projects retain their own licensing; consult each repository.
 
 ---
 
