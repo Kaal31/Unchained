@@ -23,6 +23,18 @@ Open questions: where exactly to intercept in the container, how to reconcile co
 
 ---
 
+## Denuvo-protected titles
+
+Unchained already detects Denuvo Anti-Tamper from Steam's declared DRM information and badges those titles in the library. Two things would make that more useful:
+
+**Warn before the download, not after.** Right now the badge is informational and easy to miss. Denuvo titles are frequently large, and someone can spend a 60 GB download before discovering the game won't start for them. Surfacing the DRM state at the point of adding or installing — with a clear explanation of what it means — saves that.
+
+**Compatibility for owned Denuvo titles.** A Denuvo game you legitimately own still has to complete its activation handshake, and that path is untested inside the Wine/Proton container. Where it fails for container or networking reasons rather than licensing ones, those are ordinary compatibility bugs worth fixing so owned games run.
+
+Defeating the protection itself is out of scope for this project.
+
+---
+
 ## Smaller items
 
 - **Fix source coverage** — more sources in the fix picker, and better badge accuracy on the ones already listed.
