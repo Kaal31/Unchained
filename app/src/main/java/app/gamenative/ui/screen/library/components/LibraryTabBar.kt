@@ -1,0 +1,654 @@
+package app.gamenative.ui.screen.library.components
+
+import android.view.KeyEvent
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.foundation.background
+import androidx.compose.foundation.focusGroup
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Tune
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInParent
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.dp
+import app.gamenative.BuildConfig
+import app.gamenative.R
+import app.gamenative.ui.component.focusRing
+import app.gamenative.ui.enums.LibraryTab
+import app.gamenative.ui.theme.PluviaTheme
+import app.gamenative.ui.util.WindowWidthClass
+import app.gamenative.ui.util.rememberWindowWidthClass
+
+/**
+ * Tab bar for library navigation with sliding pill indicator.
+ * Adapts to screen width
+ */
+@Composable
+fun LibraryTabBar(
+    currentTab: LibraryTab,
+    tabCounts: Map<LibraryTab, Int>,
+    onTabSelected: (LibraryTab) -> Unit,
+    onOptionsClick: () -> Unit,
+    onSearchClick: () -> Unit,
+    onAddGameClick: () -> Unit,
+    onMenuClick: () -> Unit,
+    onNavigateDownToGrid: () -> Unit,
+    onPreviousTab: () -> Unit = {},
+    onNextTab: () -> Unit = {},
+    modifier: Modifier = Modifier,
+) {
+    val widthClass = rememberWindowWidthClass()
+
+    when (widthClass) {
+        WindowWidthClass.COMPACT -> CompactLibraryTabBar(
+            currentTab = currentTab,
+            tabCounts = tabCounts,
+            onTabSelected = onTabSelected,
+            onOptionsClick = onOptionsClick,
+            onSearchClick = onSearchClick,
+            onAddGameClick = onAddGameClick,
+            onMenuClick = onMenuClick,
+            onNavigateDownToGrid = onNavigateDownToGrid,
+            onPreviousTab = onPreviousTab,
+            onNextTab = onNextTab,
+            modifier = modifier,
+        )
+
+        else -> ExpandedLibraryTabBar(
+            currentTab = currentTab,
+            tabCounts = tabCounts,
+            onTabSelected = onTabSelected,
+            onOptionsClick = onOptionsClick,
+            onSearchClick = onSearchClick,
+            onAddGameClick = onAddGameClick,
+            onMenuClick = onMenuClick,
+            onNavigateDownToGrid = onNavigateDownToGrid,
+            onPreviousTab = onPreviousTab,
+            onNextTab = onNextTab,
+            modifier = modifier,
+        )
+    }
+}
+
+/**
+ * Compact tab bar for narrow screens.
+ * Centered tabs with action buttons for Options, Search, Add Game, and Menu.
+ */
+@Composable
+private fun CompactLibraryTabBar(
+    currentTab: LibraryTab,
+    tabCounts: Map<LibraryTab, Int>,
+    onTabSelected: (LibraryTab) -> Unit,
+    onOptionsClick: () -> Unit,
+    onSearchClick: () -> Unit,
+    onAddGameClick: () -> Unit,
+    onMenuClick: () -> Unit,
+    onNavigateDownToGrid: () -> Unit,
+    onPreviousTab: () -> Unit,
+    onNextTab: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val tabs = LibraryTab.visibleEntries
+    val currentIndex = tabs.indexOf(currentTab)
+    val scrollState = rememberScrollState()
+    val tabPositions = remember { mutableStateMapOf<Int, Float>() }
+    val tabWidths = remember { mutableStateMapOf<Int, Float>() }
+
+    LaunchedEffect(currentTab) {
+        val pos = tabPositions[currentIndex] ?: return@LaunchedEffect
+        val width = tabWidths[currentIndex] ?: return@LaunchedEffect
+        val targetCenter = (pos + width / 2).toInt()
+        val viewportCenter = scrollState.viewportSize / 2
+        scrollState.animateScrollTo((targetCenter - viewportCenter).coerceAtLeast(0))
+    }
+
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(top = 2.dp, bottom = 4.dp, start = 8.dp, end = 8.dp),
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .focusGroup()
+                .onPreviewKeyEvent { keyEvent ->
+                    if (keyEvent.nativeKeyEvent.action == KeyEvent.ACTION_DOWN) {
+                        when (keyEvent.nativeKeyEvent.keyCode) {
+                            KeyEvent.KEYCODE_DPAD_DOWN -> {
+                                onNavigateDownToGrid()
+                                true
+                            }
+                            KeyEvent.KEYCODE_BUTTON_L1 -> {
+                                onPreviousTab()
+                                true
+                            }
+                            KeyEvent.KEYCODE_BUTTON_R1 -> {
+                                onNextTab()
+                                true
+                            }
+                            else -> false
+                        }
+                    } else {
+                        false
+                    }
+                },
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            CompactIconButton(
+                icon = Icons.Default.Tune,
+                contentDescription = stringResource(R.string.options),
+                onClick = onOptionsClick,
+            )
+
+            Row(
+                modifier = Modifier
+                    .weight(1f)
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
+                    .horizontalScroll(scrollState)
+                    .padding(horizontal = 4.dp, vertical = 2.dp),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                // Steam tab pill replaced by a centered, dynamic game count.
+                val gamesCount = tabCounts[LibraryTab.STEAM]
+                    ?: tabCounts.values.maxOrNull() ?: 0
+                Text(
+                    text = stringResource(R.string.library_games_count, gamesCount),
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Medium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f),
+                )
+            }
+
+            CompactIconButton(
+                icon = Icons.Default.Search,
+                contentDescription = stringResource(R.string.search),
+                onClick = onSearchClick,
+            )
+            if (!BuildConfig.MODERN_ANDROID) {
+                CompactIconButton(
+                    icon = Icons.Default.Add,
+                    contentDescription = stringResource(R.string.action_add_game),
+                    onClick = onAddGameClick,
+                )
+            }
+            CompactIconButton(
+                icon = Icons.Default.Menu,
+                contentDescription = stringResource(R.string.menu),
+                onClick = onMenuClick,
+            )
+        }
+    }
+}
+
+/**
+ * Simple icon button for compact tab bar.
+ */
+@Composable
+private fun CompactIconButton(
+    icon: ImageVector,
+    contentDescription: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isFocused by interactionSource.collectIsFocusedAsState()
+
+    Box(
+        modifier = modifier
+            .size(36.dp)
+            .clip(CircleShape)
+            .background(
+                if (isFocused) {
+                    MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+                } else {
+                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                },
+            )
+            .focusRing(interactionSource, CircleShape, width = 2.dp)
+            .selectable(
+                selected = false,
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = onClick,
+            ),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = contentDescription,
+            tint = if (isFocused) {
+                MaterialTheme.colorScheme.primary
+            } else {
+                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
+            },
+            modifier = Modifier.size(20.dp),
+        )
+    }
+}
+
+/**
+ * Expanded tab bar for wide screens (landscape phone, tablet).
+ */
+@Composable
+private fun ExpandedLibraryTabBar(
+    currentTab: LibraryTab,
+    tabCounts: Map<LibraryTab, Int>,
+    onTabSelected: (LibraryTab) -> Unit,
+    onOptionsClick: () -> Unit,
+    onSearchClick: () -> Unit,
+    onAddGameClick: () -> Unit,
+    onMenuClick: () -> Unit,
+    onNavigateDownToGrid: () -> Unit,
+    onPreviousTab: () -> Unit,
+    onNextTab: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val tabs = LibraryTab.visibleEntries
+    val currentIndex = tabs.indexOf(currentTab)
+    val scrollState = rememberScrollState()
+
+    val tabPositions = remember { mutableStateMapOf<Int, Float>() }
+    val tabWidths = remember { mutableStateMapOf<Int, Float>() }
+
+    val density = LocalDensity.current
+
+    val indicatorOffset by animateDpAsState(
+        targetValue = with(density) { (tabPositions[currentIndex] ?: 0f).toDp() },
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMedium,
+        ),
+        label = "indicatorOffset",
+    )
+
+    val indicatorWidth by animateDpAsState(
+        targetValue = with(density) { (tabWidths[currentIndex] ?: 80f).toDp() },
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMedium,
+        ),
+        label = "indicatorWidth",
+    )
+
+    LaunchedEffect(currentTab) {
+        val pos = tabPositions[currentIndex] ?: return@LaunchedEffect
+        val width = tabWidths[currentIndex] ?: return@LaunchedEffect
+        val targetCenter = (pos + width / 2).toInt()
+        val viewportCenter = scrollState.viewportSize / 2
+        scrollState.animateScrollTo((targetCenter - viewportCenter).coerceAtLeast(0))
+    }
+
+    Box(
+        modifier = modifier
+            .background(
+                brush = Brush.verticalGradient(
+                    colors = listOf(
+                        MaterialTheme.colorScheme.surface.copy(alpha = 0.98f),
+                        MaterialTheme.colorScheme.surface.copy(alpha = 0.85f),
+                        Color.Transparent,
+                    ),
+                ),
+            )
+            .padding(top = 8.dp, bottom = 20.dp),
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp)
+                .focusGroup()
+                .onPreviewKeyEvent { keyEvent ->
+                    if (keyEvent.nativeKeyEvent.action == KeyEvent.ACTION_DOWN) {
+                        when (keyEvent.nativeKeyEvent.keyCode) {
+                            KeyEvent.KEYCODE_DPAD_DOWN -> {
+                                onNavigateDownToGrid()
+                                true
+                            }
+                            KeyEvent.KEYCODE_BUTTON_L1 -> {
+                                onPreviousTab()
+                                true
+                            }
+                            KeyEvent.KEYCODE_BUTTON_R1 -> {
+                                onNextTab()
+                                true
+                            }
+                            else -> false
+                        }
+                    } else {
+                        false
+                    }
+                },
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            IconActionButton(
+                icon = Icons.Default.Tune,
+                contentDescription = stringResource(R.string.options),
+                onClick = onOptionsClick,
+            )
+
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .clip(RoundedCornerShape(24.dp))
+                    .background(
+                        brush = Brush.horizontalGradient(
+                            colors = listOf(
+                                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
+                                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                            ),
+                        ),
+                    )
+                    .horizontalScroll(scrollState)
+                    .padding(4.dp),
+                contentAlignment = Alignment.CenterStart,
+            ) {
+                // Sliding pill indicator (rendered behind tabs)
+                Box(
+                    modifier = Modifier
+                        .offset { IntOffset(indicatorOffset.roundToPx(), 0) }
+                        .width(indicatorWidth)
+                        .height(40.dp)
+                        .clip(RoundedCornerShape(20.dp))
+                        .background(
+                            brush = Brush.horizontalGradient(
+                                colors = listOf(
+                                    MaterialTheme.colorScheme.primary,
+                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.9f),
+                                ),
+                            ),
+                        ),
+                )
+
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    tabs.forEachIndexed { index, tab ->
+                        TabItem(
+                            tab = tab,
+                            count = tabCounts[tab],
+                            isSelected = tab == currentTab,
+                            onClick = { onTabSelected(tab) },
+                            onPositioned = { position, width ->
+                                tabPositions[index] = position
+                                tabWidths[index] = width
+                            },
+                        )
+                    }
+                }
+            }
+
+            IconActionButton(
+                icon = Icons.Default.Search,
+                contentDescription = stringResource(R.string.search),
+                onClick = onSearchClick,
+            )
+
+            if (!BuildConfig.MODERN_ANDROID) {
+                IconActionButton(
+                    icon = Icons.Default.Add,
+                    contentDescription = stringResource(R.string.action_add_game),
+                    onClick = onAddGameClick,
+                )
+            }
+
+            IconActionButton(
+                icon = Icons.Default.Menu,
+                contentDescription = stringResource(R.string.menu),
+                onClick = onMenuClick,
+            )
+        }
+    }
+}
+
+@Composable
+private fun IconActionButton(
+    icon: ImageVector,
+    contentDescription: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isFocused by interactionSource.collectIsFocusedAsState()
+
+    val scale by animateFloatAsState(
+        targetValue = if (isFocused) 1.15f else 1f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMedium,
+        ),
+        label = "iconButtonScale",
+    )
+
+    val alpha by animateFloatAsState(
+        targetValue = if (isFocused) 1f else 0.7f,
+        animationSpec = spring(stiffness = Spring.StiffnessMedium),
+        label = "iconButtonAlpha",
+    )
+
+    Box(
+        modifier = modifier
+            // Both the focus scale and alpha go in a SINGLE graphicsLayer above the ring. Previously
+            // .scale (above) and .alpha (below) were two separate animating layers sandwiching the
+            // focusRing draw node, which made the ring flicker off ~100ms after focus. One stable
+            // layer wrapping clip/background/focusRing fixes it.
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+                this.alpha = alpha
+            }
+            .size(44.dp)
+            .clip(CircleShape)
+            .background(
+                brush = Brush.radialGradient(
+                    colors = if (isFocused) {
+                        listOf(
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.4f),
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
+                        )
+                    } else {
+                        listOf(
+                            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
+                            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f),
+                        )
+                    },
+                ),
+            )
+            .focusRing(interactionSource, CircleShape, width = 2.dp)
+            .selectable(
+                // These are actions, not toggles; feeding isFocused back as `selected` caused an
+                // extra recomposition on every focus change.
+                selected = false,
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = onClick,
+            ),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = contentDescription,
+            tint = if (isFocused) {
+                MaterialTheme.colorScheme.primary
+            } else {
+                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
+            },
+            modifier = Modifier.size(22.dp),
+        )
+    }
+}
+
+@Composable
+private fun TabItem(
+    tab: LibraryTab,
+    count: Int?,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    onPositioned: (Float, Float) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isFocused by interactionSource.collectIsFocusedAsState()
+
+    val textAlpha by animateFloatAsState(
+        targetValue = when {
+            isSelected -> 1f
+            isFocused -> 0.9f
+            else -> 0.6f
+        },
+        animationSpec = spring(stiffness = Spring.StiffnessMedium),
+        label = "textAlpha",
+    )
+
+    val label = if (count != null && count > 0) {
+        stringResource(R.string.library_tab_with_count, stringResource(tab.labelResId), count)
+    } else {
+        stringResource(tab.labelResId)
+    }
+
+    Box(
+        modifier = modifier
+            // Min height = the sliding pill's height (40.dp) so the focus ring outlines the same
+            // 40dp-tall, 20dp-radius capsule the user sees. Uses heightIn (not a fixed height) so the
+            // label can grow at large accessibility font scales instead of being clipped.
+            .heightIn(min = 40.dp)
+            .clip(RoundedCornerShape(20.dp))
+            .focusRing(interactionSource, RoundedCornerShape(20.dp), width = 2.dp)
+            .onGloballyPositioned { coordinates ->
+                onPositioned(
+                    coordinates.positionInParent().x,
+                    coordinates.size.width.toFloat(),
+                )
+            }
+            .selectable(
+                selected = isSelected,
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = onClick,
+            )
+            .padding(horizontal = 20.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelLarge,
+            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            color = when {
+                isSelected -> MaterialTheme.colorScheme.onPrimary
+                else -> MaterialTheme.colorScheme.onSurface.copy(alpha = textAlpha)
+            },
+            textAlign = TextAlign.Center,
+        )
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF1A1A1A)
+@Composable
+private fun Preview_LibraryTabBar() {
+    PluviaTheme {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+        ) {
+            LibraryTabBar(
+                currentTab = LibraryTab.ALL,
+                tabCounts = mapOf(
+                    LibraryTab.ALL to 42,
+                    LibraryTab.STEAM to 30,
+                    LibraryTab.GOG to 8,
+                    LibraryTab.EPIC to 4,
+                    LibraryTab.LOCAL to 3,
+                ),
+                onTabSelected = {},
+                onOptionsClick = {},
+                onSearchClick = {},
+                onAddGameClick = {},
+                onMenuClick = {},
+                onNavigateDownToGrid = {},
+            )
+        }
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF1A1A1A)
+@Composable
+private fun Preview_LibraryTabBar_Steam() {
+    PluviaTheme {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+        ) {
+            LibraryTabBar(
+                currentTab = LibraryTab.STEAM,
+                tabCounts = mapOf(
+                    LibraryTab.ALL to 42,
+                    LibraryTab.STEAM to 30,
+                    LibraryTab.GOG to 8,
+                    LibraryTab.EPIC to 4,
+                    LibraryTab.LOCAL to 3,
+                ),
+                onTabSelected = {},
+                onOptionsClick = {},
+                onSearchClick = {},
+                onAddGameClick = {},
+                onMenuClick = {},
+                onNavigateDownToGrid = {},
+            )
+        }
+    }
+}
