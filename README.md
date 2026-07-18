@@ -81,12 +81,8 @@ Some source is deliberately withheld and will not be present:
 
 ---
 
-## Credits & license
+## Credits 
 
-Built on **[GameNative](https://github.com/utkarshdalal/GameNative)** (GPL-3.0). The Steam/manifest workflow is ported from **LuaTools**. Steam connectivity is provided by **[JavaSteam](https://github.com/Longi94/JavaSteam)** (MIT).
-
-Licensed under **GPL-3.0** — see [`LICENSE`](LICENSE).
-
----
+Built on **[GameNative](https://github.com/utkarshdalal/GameNative)** (GPL-3.0). 
 
 **Disclaimer:** This is software for running games. You are responsible for how you use it and for complying with the laws and terms of service that apply to you. Provided without warranty of any kind.
