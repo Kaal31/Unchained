@@ -93,8 +93,6 @@ This project exists because other people published their work. Every one of thes
 
 - **[GameNative](https://github.com/utkarshdalal/GameNative)** — the foundation. The entire Wine/Proton container, Steam authentication, depot downloader and library UI are theirs; Unchained is a fork that adds a manifest workflow on top.
 - **[SLSsteam](https://github.com/AceSLS/SLSsteam)** by AceSLS — the original approach to feeding ownership and depot information to Steam, and the basis everything downstream grew from.
-- **[slsteam-moon](https://github.com/swwayps/slsteam-moon)** by swwayps — a branch of SLSsteam adding protocol handlers, SteamStub support and a Lua manifest importer.
-- **[luatools-moon](https://github.com/swwayps/luatools-moon)** by swwayps — the LuaTools plugin and installer this project's manifest-source pipeline is ported from.
 - **[JavaSteam](https://github.com/Longi94/JavaSteam)** by Longi94 — the Steam client implementation the download path runs on.
 
 ## License
